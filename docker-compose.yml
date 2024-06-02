@@ -1,0 +1,30 @@
+version: '3'
+services:
+  flask-app:
+    build: .
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    # environment:
+    #   OPENAI_API_KEY:
+    volumes:
+      - ./:/app
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python /services/notification_service.py
+    ports:
+      - "5001:5001"
+    environment:
+      FLASK_APP: services/notification_service.py
+    volumes:
+      - ./:/app
+
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    ports:
+      - "5673:5673"
+      - "15673:15673"
