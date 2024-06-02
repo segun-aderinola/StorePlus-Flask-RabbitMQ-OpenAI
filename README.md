@@ -18,11 +18,6 @@
 
 ## How to Run
 1. Ensure Docker and Docker Compose are installed.
-2. Place your OpenAI API key in the `docker-compose.yml` file.
+2. Place your OpenAI API key in the `.env` or `docker-compose.yml` file.
 3. Run `docker-compose up --build` to start the services.
 4. The Flask API will be available at `http://localhost:5000`.
-
-## Future Improvements
-- Enhance error handling and validation.
-- Add more AI-powered features such as personalized recommendations.
-- Scale the services using Kubernetes for better performance and reliability.
