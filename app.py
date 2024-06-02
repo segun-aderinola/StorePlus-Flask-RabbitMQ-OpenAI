@@ -4,7 +4,9 @@ import os
 from flask_socketio import SocketIO, emit
 import json
 import time
-import pika
+from services.order_processor import send_order_to_queue
+import services.notification_service
+# from 
 
 # client = OpenAI()
 
@@ -14,7 +16,6 @@ DATA_FILE = 'books.json'
 
 # db = SQLAlchemy(app)
 socketio = SocketIO(app)
-
 
 
 openai.api_key = os.getenv('OPENAI_API_KEY')
@@ -153,27 +154,27 @@ def generate_summary(book_id):
         
     return jsonify({"error": "Book not found"}), 404
 
-@socketio.on('connect')
-def handle_connect():
-    print('Client connected')
+# @socketio.on('connect')
+# def handle_connect():
+#     print('Client connected')
 
-@socketio.on('disconnect')
-def handle_disconnect():
-    print('Client disconnected')
+# @socketio.on('disconnect')
+# def handle_disconnect():
+#     print('Client disconnected')
 
-def send_order_to_queue(order_data):
-    try:
+# def send_order_to_queue(order_data):
+#     try:
 
-        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-        channel = connection.channel()
-        channel.queue_declare(queue='order_queue')
-        channel.basic_publish(exchange='', routing_key='order_queue', body=json.dumps(order_data))
-        connection.close()
-        
-    except pika.exceptions.AMQPConnectionError as e:
-        print(f"Error connecting to RabbitMQ: {e}")
-        raise e
+#         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+#         channel = connection.channel()
+#         channel.queue_declare(queue='order_queue')
+#         channel.basic_publish(exchange='', routing_key='order_queue', body=json.dumps(order_data))
+#         connection.close()
+
+#     except pika.exceptions.AMQPConnectionError as e:
+#         print(f"Error connecting to RabbitMQ: {e}")
+#         raise e
 
 if __name__ == '__main__':
-    # db.create_all()
-    socketio.run(app, host='0.0.0.0', port=5000)
+    # app.run(debug=True)
+    app.run(app, host='0.0.0.0', port=5000)

@@ -1,22 +1,39 @@
-import pika
-import json
+from flask import Flask, request, jsonify
 from flask_socketio import SocketIO
-from app import socketio
+import json
 
-def notify_status_update(order_id, status):
-    socketio.emit('order_status_update', {'order_id': order_id, 'status': status}, broadcast=True)
+app = Flask(__name__)
+socketio = SocketIO(app)
 
-def process_notifications():
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    channel.queue_declare(queue='status_queue')
+DATA_FILE = 'books.json'
 
-    def callback(ch, method, properties, body):
-        status_update = json.loads(body)
-        notify_status_update(status_update['order_id'], status_update['status'])
+def read_data():
+    with open(DATA_FILE, 'r') as file:
+        return json.load(file)
 
-    channel.basic_consume(queue='status_queue', on_message_callback=callback, auto_ack=True)
-    channel.start_consuming()
+def write_data(data):
+    with open(DATA_FILE, 'w') as file:
+        json.dump(data, file, indent=4)
+
+@socketio.on('connect')
+def handle_connect():
+    print('Client connected')
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    print('Client disconnected')
+
+@app.route('/orders', methods=['POST'])
+def update_order_status(order_id):
+    data = read_data()
+    order = next((order for order in data['orders'] if order["id"] == order_id), None)
+    if order:
+        order['status'] = request.json.get('status', order['status'])
+        write_data(data)
+        socketio.emit('order_status', {'order_id': order_id, 'status': order['status']})
+        return jsonify({"status": "success", "message":"Order status changed", "data": order}), 200
+    return jsonify({"error": "Order not found"}), 404
 
 if __name__ == '__main__':
-    process_notifications()
+    socketio.run(app, host='0.0.0.0', port=5001, debug=True)
+
